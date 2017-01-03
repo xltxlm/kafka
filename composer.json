@@ -1,0 +1,30 @@
+{
+  "name": "xltxlm/kafka",
+  "description": "kafka操作类",
+  "authors": [
+    {
+      "name": "xltxlm",
+      "email": "xltxlm@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.0"
+  },
+  "require-dev": {
+    "xltxlm/scrutinizer": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "xltxlm\\kafka\\": [
+        "src/"
+      ]
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "xltxlm\\kafka\\": [
+        "./"
+      ]
+    }
+  }
+}
