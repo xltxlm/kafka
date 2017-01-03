@@ -1,0 +1,17 @@
+version: '2'
+services:
+  kafka:
+    image: redis
+    volumes:
+      - ../../:/kafka/
+    networks:
+      comm:
+        aliases:
+          - kafka
+    ports:
+        - "6379:6379"
+
+    restart: always
+
+networks:
+    comm:
