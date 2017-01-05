@@ -8,8 +8,10 @@
 
 namespace xltxlm\kafka;
 
+use Psr\Log\LogLevel;
 use RdKafka\Producer;
 use xltxlm\kafka\Config\KafkaConfig;
+use xltxlm\logger\Log\BasicLog;
 
 /**
  * Kafka队列生产者
@@ -64,6 +66,7 @@ final class KafkaProduce
 
     public function __invoke()
     {
+        $start = microtime(true);
         $rk = new Producer();
         $rk->setLogLevel(LOG_DEBUG);
         $rk->addBrokers($this->getKafkaConfig()->getBrokers());
@@ -71,5 +74,12 @@ final class KafkaProduce
         $topic->produce(RD_KAFKA_PARTITION_UA, 0, $this->getMessage());
         $rk->poll(0);
         $rk->poll(1);
+        $time = sprintf('%.4f', microtime(true) - $start);
+        //执行时间过长
+        if ($time > 0.3) {
+            (new BasicLog)
+                ->setMessage("kafka 发送时间过长:".$this->getKafkaConfig()->getBrokers().',topic:'.$this->getKafkaConfig()->getTopic())
+                ->setType(LogLevel::EMERGENCY);
+        }
     }
 }

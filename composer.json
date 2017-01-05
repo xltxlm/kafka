@@ -10,7 +10,8 @@
   "require": {
     "php": ">=7.0",
     "kwn/php-rdkafka-stubs": "*",
-    "xltxlm/config": "*"
+    "xltxlm/config": "*",
+    "xltxlm/logger": "*"
   },
   "require-dev": {
     "xltxlm/scrutinizer": "*"
