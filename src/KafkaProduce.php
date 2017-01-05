@@ -67,13 +67,8 @@ final class KafkaProduce
     public function __invoke()
     {
         $start = microtime(true);
-        $rk = new Producer();
-        $rk->setLogLevel(LOG_DEBUG);
-        $rk->addBrokers($this->getKafkaConfig()->getBrokers());
-        $topic = $rk->newTopic($this->getKafkaConfig()->getTopic());
+        $topic = $this->getKafkaConfig()->instanceSelf();
         $topic->produce(RD_KAFKA_PARTITION_UA, 0, $this->getMessage());
-        $rk->poll(0);
-        $rk->poll(1);
         $time = sprintf('%.4f', microtime(true) - $start);
         //执行时间过长
         if ($time > 0.3) {
