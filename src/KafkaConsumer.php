@@ -19,6 +19,8 @@ use xltxlm\kafka\Config\KafkaConfig;
  */
 final class KafkaConsumer
 {
+    /** @var  \RdKafka\Consumer */
+    private $rk;
     /** @var KafkaConfig */
     protected $KafkaConfig;
     /** @var callable $CallFunction 获取消息之后的回调执行函数 */
@@ -69,14 +71,14 @@ final class KafkaConsumer
      */
     private function topic(): ConsumerTopic
     {
-        $rk = new Consumer();
-        $rk->setLogLevel(LOG_DEBUG);
-        $rk->addBrokers($this->getKafkaConfig()->getBrokers());
+
         $topicConf = new TopicConf();
         $topicConf->set('auto.commit.interval.ms', 1e3);
         $topicConf->set('offset.store.sync.interval.ms', 60e3);
-        $topic = $rk->newTopic($this->getKafkaConfig()->getTopic(), $topicConf);
-        $topic->consumeStart(0, RD_KAFKA_OFFSET_STORED);
+        $this->rk = $this->getKafkaConfig()
+            ->instanceSelfConsumer($topicConf);
+        $topic = $this->rk->newTopic($this->getKafkaConfig()->getTopic());
+
         return $topic;
     }
 
@@ -86,19 +88,33 @@ final class KafkaConsumer
     public function __invoke()
     {
         $topic = $this->topic();
+        /** @var \RdKafka\Metadata $metadata */
+        $metadatas = $this->rk->metadata(false, $topic, 1000);
 
         while (true) {
-            // The only argument is the timeout.
-            $msg = $topic->consume(0, 1000);
-            if ($msg->err) {
-            } else {
-                if ($msg->payload) {
-                    $continue = call_user_func($this->getCallBackFunction(), $msg);
-                    if ($continue === false) {
-                        break;
+            /** @var \RdKafka\Metadata\Topic $topic */
+            foreach ($metadatas->getTopics() as $topicMetadata) {
+                /** @var \RdKafka\Metadata\Partition $partition */
+                foreach ($topicMetadata->getPartitions() as $partition) {
+                    $topic->consumeStart($partition->getId(), RD_KAFKA_OFFSET_STORED);
+                    while (true) {
+                        // The only argument is the timeout.
+                        $msg = $topic->consume($partition->getId(), 1000);
+                        if ($msg->err) {
+                            $topic->consumeStop($partition->getId());
+                            break;
+                        } else {
+                            if ($msg->payload) {
+                                $continue = call_user_func($this->getCallBackFunction(), $msg, $partition->getId());
+                                if ($continue === false) {
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
+
         }
     }
 }
