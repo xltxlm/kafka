@@ -11,6 +11,6 @@ namespace xltxlm\kafka\tests;
 
 class KafkaConfig extends \xltxlm\kafka\Config\KafkaConfig
 {
-    protected $brokers = "xxx";
+    protected $brokers = "kafka01,kafka02,kafka03";
     protected $topic = "PHPTest";
 }

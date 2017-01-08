@@ -9,7 +9,6 @@
 namespace xltxlm\kafka;
 
 use Psr\Log\LogLevel;
-use RdKafka\Producer;
 use xltxlm\kafka\Config\KafkaConfig;
 use xltxlm\logger\Log\BasicLog;
 
@@ -67,7 +66,7 @@ final class KafkaProduce
     public function __invoke()
     {
         $start = microtime(true);
-        $topic = $this->getKafkaConfig()->instanceSelfProduct();
+        $topic = $this->getKafkaConfig()->instanceSelf();
         $topic->produce(RD_KAFKA_PARTITION_UA, 0, $this->getMessage());
         $time = sprintf('%.4f', microtime(true) - $start);
         //执行时间过长
