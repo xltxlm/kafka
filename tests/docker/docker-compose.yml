@@ -43,8 +43,6 @@ services:
         aliases:
           - kafka1
 
-    restart: always
-
   kafka2:
     image: kafkarun
     volumes:
@@ -54,18 +52,15 @@ services:
         aliases:
           - kafka2
 
-    restart: always
+  kafka3:
+    image: kafkarun
+    volumes:
+      - ../opt/kafka3:/opt/kafka
+    networks:
+      comm:
+        aliases:
+          - kafka3
 
-#  kafka3:
-#    image: kafkarun
-#    volumes:
-#      - ../opt/kafka3:/opt/kafka
-#    networks:
-#      comm:
-#        aliases:
-#          - kafka3
-#
-#    restart: always
 
 networks:
     comm:
