@@ -11,6 +11,7 @@ namespace xltxlm\kafka\Config;
 use RdKafka\Consumer;
 use RdKafka\ConsumerTopic;
 use RdKafka\Message;
+use RdKafka\Metadata;
 use RdKafka\Producer;
 use RdKafka\ProducerTopic;
 use RdKafka\TopicConf;
@@ -87,7 +88,7 @@ abstract class KafkaConfig implements TestConfig
      */
     final public function instanceSelfProduct()
     {
-        $kafka = $this->getBrokers().$this->getTopic();
+        $kafka = $this->getBrokers() . $this->getTopic();
         if (!self::$instance[$kafka]) {
             self::$instance[$kafka] = $this->instanceProduct();
         }
@@ -102,7 +103,7 @@ abstract class KafkaConfig implements TestConfig
      *
      * @return \RdKafka\Consumer
      */
-    private function instanceConsumerRk($topicConf = null)
+    private function instanceConsumerRk()
     {
         $rk = new Consumer();
         $rk->setLogLevel(LOG_DEBUG);
@@ -116,26 +117,24 @@ abstract class KafkaConfig implements TestConfig
      *
      * @return \RdKafka\Consumer
      */
-    final public function instanceSelfConsumer($topicConf = null)
+    final public function instanceSelfConsumer()
     {
-        $kafka = $this->getBrokers().$this->getTopic();
+        $kafka = $this->getBrokers() . $this->getTopic();
         if (!self::$instance[$kafka]) {
-            self::$instance[$kafka] = $this->instanceConsumerRk($topicConf);
+            self::$instance[$kafka] = $this->instanceConsumerRk();
         }
 
         return self::$instance[$kafka];
     }
 
+    /**
+     * @return Metadata
+     */
     public function test()
     {
-        $topic = $this->instanceSelfConsumer()
-            ->newTopic($this->getTopic());
-        $topic->consumeStart(0, RD_KAFKA_OFFSET_BEGINNING);
-        $msg = $topic->consume(0, 1000);
-        if (get_class($msg) != Message::class) {
-            throw new \Exception('链接kafka服务失败.'.$this->getBrokers());
-        }
-
-        return $msg;
+        $rk = $this->instanceSelfConsumer();
+        $topic = $rk->newTopic($this->getTopic());
+        /** @var Metadata $metadata */
+        return $rk->metadata(false, $topic, 1000);
     }
 }

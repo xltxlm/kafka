@@ -1,6 +1,19 @@
 version: '2'
 
 services:
+
+  php:
+    image: phprun
+    volumes:
+      - ../../:/var/www/html
+      - ../opt/:/opt/
+    networks:
+      comm:
+        aliases:
+          - php
+
+    restart: always
+
   zookeeper:
     image: zookeeperrun
     volumes:

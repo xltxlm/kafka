@@ -14,8 +14,10 @@
 >
 
     <testsuites>
-        <testsuite name="tests">
-            <directory suffix="Test.php">./tests/</directory>
+        <testsuite name="ProductKafka">
+            <file>./tests/ConfigTest.php</file>
+            <file>./tests/ProductKafkaTest.php</file>
+            <file>./tests/ConsumeKafkaTest.php</file>
         </testsuite>
     </testsuites>
 

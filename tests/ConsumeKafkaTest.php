@@ -9,38 +9,43 @@ declare(ticks = 1);
 
 namespace kuaigeng\review\Crontab;
 
-use kuaigeng\review\Config\Kafka;
+use PHPUnit\Framework\TestCase;
 use RdKafka\Message;
 use xltxlm\kafka\KafkaConsumer;
 use xltxlm\kafka\KafkaConsumerCall;
+use xltxlm\kafka\tests\KafkaConfig;
 
-include_once __DIR__.'/../vendor/autoload.php';
-
-class ConsumeKafka implements KafkaConsumerCall
+class ConsumeKafkaTest extends TestCase implements KafkaConsumerCall
 {
+    private static $i = 0;
+
     /**
      * @param Message $msg
      *
      * @return bool
      */
-    public function callBack(Message $msg): bool
+    public function messageCallBack(Message $msg): bool
     {
         if ($msg->err) {
-            return true;
+            return false;
         }
         print_r($msg->payload);
         echo "\n";
-
+        self::$i++;
         return true;
     }
 
-    public function __invoke()
+    /**
+     * 死循环读取信息.
+     *
+     * @test
+     */
+    public function testrun()
     {
         (new KafkaConsumer())
-            ->setKafkaConfig(new Kafka())
-            ->setCallBackObject([$this, 'call'])
+            ->setKafkaConfig(new KafkaConfig())
+            ->setCallBackObject($this)
             ->__invoke();
+        $this->assertEquals(10, self::$i);
     }
 }
-
-(new ConsumeKafka())();

@@ -10,6 +10,7 @@ namespace xltxlm\kafka;
 
 use RdKafka\Consumer;
 use RdKafka\ConsumerTopic;
+use RdKafka\Message;
 use RdKafka\TopicConf;
 use xltxlm\kafka\Config\KafkaConfig;
 
@@ -23,25 +24,25 @@ final class KafkaConsumer
     private $rk;
     /** @var KafkaConfig */
     protected $KafkaConfig;
-    /** @var callable $CallFunction 获取消息之后的回调执行函数 */
-    protected $CallBackFunction;
+    /** @var KafkaConsumerCall $CallFunction 获取消息之后的回调执行函数 */
+    protected $CallBackObject;
 
     /**
-     * @return callable
+     * @return KafkaConsumerCall
      */
-    public function getCallBackFunction(): callable
+    public function getCallBackObject()
     {
-        return $this->CallBackFunction;
+        return $this->CallBackObject;
     }
 
     /**
-     * @param callable $CallBackFunction
+     * @param KafkaConsumerCall $CallBackObject
      *
      * @return KafkaConsumer
      */
-    public function setCallBackFunction(callable $CallBackFunction): KafkaConsumer
+    public function setCallBackObject(KafkaConsumerCall $CallBackObject): KafkaConsumer
     {
-        $this->CallBackFunction = $CallBackFunction;
+        $this->CallBackObject = $CallBackObject;
 
         return $this;
     }
@@ -73,21 +74,25 @@ final class KafkaConsumer
     {
 
         $topicConf = new TopicConf();
+        //$topicConf->set('offset.store.path', sys_get_temp_dir());
         $topicConf->set('auto.commit.interval.ms', 1e3);
         $topicConf->set('offset.store.sync.interval.ms', 60e3);
+        $topicConf->set('offset.store.method', 'file');
+        $topicConf->set('auto.offset.reset', 'smallest');
         $this->rk = $this->getKafkaConfig()
-            ->instanceSelfConsumer($topicConf);
-        $topic = $this->rk->newTopic($this->getKafkaConfig()->getTopic());
+            ->instanceSelfConsumer();
+        $topic = $this->rk->newTopic($this->getKafkaConfig()->getTopic(), $topicConf);
 
         return $topic;
     }
 
     /**
-     * 死循环读取数据,如果需要指定获取多少数据量,外部回调函数控制返回 false就可以.
+     * 死循环读取数据,直到最后一个数据,退出循环
      */
     public function __invoke()
     {
         $topic = $this->topic();
+
         //用队列集合多个partitions
         $queue = $this->rk->newQueue();
         /** @var \RdKafka\Metadata $metadata */
@@ -100,19 +105,15 @@ final class KafkaConsumer
                 $topic->consumeQueueStart($partition->getId(), RD_KAFKA_OFFSET_STORED, $queue);
             }
         }
-
-
         while (true) {
             // The only argument is the timeout.
-            $msg = $queue->consume(1000);
-            if ($msg->err) {
-            } else {
-                if ($msg->payload) {
-                    $continue = call_user_func($this->getCallBackFunction(), $msg);
-                    if ($continue === false) {
-                        break;
-                    }
-                }
+            $message = $queue->consume(1000);
+            if (get_class($message) != Message::class) {
+                continue;
+            }
+            $continue = call_user_func([$this->getCallBackObject(), 'messageCallBack'], $message);
+            if (!$continue) {
+                break;
             }
         }
 

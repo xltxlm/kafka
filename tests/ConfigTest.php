@@ -3,12 +3,21 @@
  * Created by PhpStorm.
  * User: xialintai
  * Date: 2017/1/4
- * Time: 18:05
+ * Time: 18:05.
  */
 
 namespace xltxlm\kafka\tests;
 
+use PHPUnit\Framework\TestCase;
 
-include __DIR__."/../vendor/autoload.php";
-(new KafkaConfig)
-    ->test();
+class ConfigTest extends TestCase
+{
+    /**
+     * 测试度武器是否能链接上去.
+     */
+    public function testConfig()
+    {
+        (new KafkaConfig())
+            ->test();
+    }
+}

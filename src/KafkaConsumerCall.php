@@ -19,5 +19,5 @@ interface KafkaConsumerCall
     /**
      * @return bool
      */
-    public function callBack(Message $msg): bool;
+    public function messageCallBack(Message $msg): bool;
 }
