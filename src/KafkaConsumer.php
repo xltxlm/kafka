@@ -19,27 +19,29 @@ use xltxlm\kafka\Config\KafkaConfig;
  */
 final class KafkaConsumer
 {
+    /** @var  \RdKafka\Consumer */
+    private $rk;
     /** @var KafkaConfig */
     protected $KafkaConfig;
     /** @var callable $CallFunction 获取消息之后的回调执行函数 */
-    protected $CallBackObject;
+    protected $CallBackFunction;
 
     /**
      * @return callable
      */
-    public function getCallBackObject(): callable
+    public function getCallBackFunction(): callable
     {
-        return $this->CallBackObject;
+        return $this->CallBackFunction;
     }
 
     /**
-     * @param KafkaConsumerCall $CallBackObject
+     * @param callable $CallBackFunction
      *
      * @return KafkaConsumer
      */
-    public function setCallBackObject(KafkaConsumerCall $CallBackObject): KafkaConsumer
+    public function setCallBackFunction(callable $CallBackFunction): KafkaConsumer
     {
-        $this->CallBackObject = $CallBackObject;
+        $this->CallBackFunction = $CallBackFunction;
 
         return $this;
     }
@@ -69,14 +71,14 @@ final class KafkaConsumer
      */
     private function topic(): ConsumerTopic
     {
-        $rk = new Consumer();
-        $rk->setLogLevel(LOG_DEBUG);
-        $rk->addBrokers($this->getKafkaConfig()->getBrokers());
+
         $topicConf = new TopicConf();
         $topicConf->set('auto.commit.interval.ms', 1e3);
         $topicConf->set('offset.store.sync.interval.ms', 60e3);
-        $topic = $rk->newTopic($this->getKafkaConfig()->getTopic(), $topicConf);
-        $topic->consumeStart(0, RD_KAFKA_OFFSET_STORED);
+        $this->rk = $this->getKafkaConfig()
+            ->instanceSelfConsumer($topicConf);
+        $topic = $this->rk->newTopic($this->getKafkaConfig()->getTopic());
+
         return $topic;
     }
 
@@ -86,19 +88,33 @@ final class KafkaConsumer
     public function __invoke()
     {
         $topic = $this->topic();
+        //用队列集合多个partitions
+        $queue = $this->rk->newQueue();
+        /** @var \RdKafka\Metadata $metadata */
+        $metadatas = $this->rk->metadata(false, $topic, 1000);
+
+        /** @var \RdKafka\Metadata\Topic $topic */
+        foreach ($metadatas->getTopics() as $topicMetadata) {
+            /** @var \RdKafka\Metadata\Partition $partition */
+            foreach ($topicMetadata->getPartitions() as $partition) {
+                $topic->consumeQueueStart($partition->getId(), RD_KAFKA_OFFSET_STORED, $queue);
+            }
+        }
+
 
         while (true) {
             // The only argument is the timeout.
-            $message = $topic->consume(0, 1000);
-            if ($message->err) {
+            $msg = $queue->consume(1000);
+            if ($msg->err) {
             } else {
-                if ($message->payload) {
-                    $continue = call_user_func([$this->getCallBackObject(), 'callBack'], $message);
+                if ($msg->payload) {
+                    $continue = call_user_func($this->getCallBackFunction(), $msg);
                     if ($continue === false) {
                         break;
                     }
                 }
             }
         }
+
     }
 }

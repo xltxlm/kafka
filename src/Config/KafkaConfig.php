@@ -13,6 +13,7 @@ use RdKafka\ConsumerTopic;
 use RdKafka\Message;
 use RdKafka\Producer;
 use RdKafka\ProducerTopic;
+use RdKafka\TopicConf;
 use xltxlm\config\TestConfig;
 
 abstract class KafkaConfig implements TestConfig
@@ -66,6 +67,7 @@ abstract class KafkaConfig implements TestConfig
 
     /**
      * 返回链接,重新链接.
+     *
      * @return ProducerTopic
      */
     private function instanceProduct()
@@ -74,11 +76,13 @@ abstract class KafkaConfig implements TestConfig
         $rk->setLogLevel(LOG_DEBUG);
         $rk->addBrokers($this->getBrokers());
         $topic = $rk->newTopic($this->getTopic());
+
         return $topic;
     }
 
     /**
      * 返回生产者链接,单例.
+     *
      * @return ProducerTopic
      */
     final public function instanceSelfProduct()
@@ -93,26 +97,30 @@ abstract class KafkaConfig implements TestConfig
 
     /**
      * 返回链接,重新链接.
-     * @return ConsumerTopic
+     *
+     * @param null|TopicConf $topicConf
+     *
+     * @return \RdKafka\Consumer
      */
-    private function instanceConsumer()
+    private function instanceConsumerRk($topicConf = null)
     {
         $rk = new Consumer();
         $rk->setLogLevel(LOG_DEBUG);
         $rk->addBrokers($this->getBrokers());
-        $topic = $rk->newTopic($this->getTopic());
-        return $topic;
+        return $rk;
     }
 
     /**
      * 返回消费者链接,单例.
-     * @return ConsumerTopic
+     * @param null|TopicConf $topicConf
+     *
+     * @return \RdKafka\Consumer
      */
-    final public function instanceSelfConsumer()
+    final public function instanceSelfConsumer($topicConf = null)
     {
         $kafka = $this->getBrokers().$this->getTopic();
         if (!self::$instance[$kafka]) {
-            self::$instance[$kafka] = $this->instanceConsumer();
+            self::$instance[$kafka] = $this->instanceConsumerRk($topicConf);
         }
 
         return self::$instance[$kafka];
@@ -120,13 +128,14 @@ abstract class KafkaConfig implements TestConfig
 
     public function test()
     {
-        $topic = $this->instanceSelfConsumer();
+        $topic = $this->instanceSelfConsumer()
+            ->newTopic($this->getTopic());
         $topic->consumeStart(0, RD_KAFKA_OFFSET_BEGINNING);
         $msg = $topic->consume(0, 1000);
         if (get_class($msg) != Message::class) {
-            throw new \Exception("链接kafka服务失败.".$this->getBrokers());
+            throw new \Exception('链接kafka服务失败.'.$this->getBrokers());
         }
+
         return $msg;
     }
-
 }
