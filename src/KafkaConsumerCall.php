@@ -17,6 +17,7 @@ use RdKafka\Message;
 interface KafkaConsumerCall
 {
     /**
+     * @param Message $msg
      * @return bool
      */
     public function messageCallBack(Message $msg): bool;

@@ -9,7 +9,6 @@
 namespace xltxlm\kafka;
 
 use Psr\Log\LogLevel;
-use RdKafka\Producer;
 use xltxlm\kafka\Config\KafkaConfig;
 use xltxlm\logger\Log\BasicLog;
 

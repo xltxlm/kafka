@@ -8,7 +8,6 @@
 
 namespace xltxlm\kafka;
 
-use RdKafka\Consumer;
 use RdKafka\ConsumerTopic;
 use RdKafka\Message;
 use RdKafka\TopicConf;
@@ -74,7 +73,6 @@ final class KafkaConsumer
     {
 
         $topicConf = new TopicConf();
-        //$topicConf->set('offset.store.path', sys_get_temp_dir());
         $topicConf->set('auto.commit.interval.ms', 1e3);
         $topicConf->set('offset.store.sync.interval.ms', 60e3);
         $topicConf->set('offset.store.method', 'file');
@@ -96,7 +94,7 @@ final class KafkaConsumer
         //用队列集合多个partitions
         $queue = $this->rk->newQueue();
         /** @var \RdKafka\Metadata $metadata */
-        $metadatas = $this->rk->metadata(false, $topic, 1000);
+        $metadatas = $this->rk->getMetadata(false, $topic, 1000);
 
         /** @var \RdKafka\Metadata\Topic $topic */
         foreach ($metadatas->getTopics() as $topicMetadata) {

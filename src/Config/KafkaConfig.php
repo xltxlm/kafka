@@ -9,12 +9,9 @@
 namespace xltxlm\kafka\Config;
 
 use RdKafka\Consumer;
-use RdKafka\ConsumerTopic;
-use RdKafka\Message;
 use RdKafka\Metadata;
 use RdKafka\Producer;
 use RdKafka\ProducerTopic;
-use RdKafka\TopicConf;
 use xltxlm\config\TestConfig;
 
 abstract class KafkaConfig implements TestConfig
@@ -76,6 +73,7 @@ abstract class KafkaConfig implements TestConfig
         $rk = new Producer();
         $rk->setLogLevel(LOG_DEBUG);
         $rk->addBrokers($this->getBrokers());
+        /** @var ProducerTopic $topic */
         $topic = $rk->newTopic($this->getTopic());
 
         return $topic;
@@ -99,8 +97,6 @@ abstract class KafkaConfig implements TestConfig
     /**
      * 返回链接,重新链接.
      *
-     * @param null|TopicConf $topicConf
-     *
      * @return \RdKafka\Consumer
      */
     private function instanceConsumerRk()
@@ -113,8 +109,6 @@ abstract class KafkaConfig implements TestConfig
 
     /**
      * 返回消费者链接,单例.
-     * @param null|TopicConf $topicConf
-     *
      * @return \RdKafka\Consumer
      */
     final public function instanceSelfConsumer()
@@ -135,6 +129,6 @@ abstract class KafkaConfig implements TestConfig
         $rk = $this->instanceSelfConsumer();
         $topic = $rk->newTopic($this->getTopic());
         /** @var Metadata $metadata */
-        return $rk->metadata(false, $topic, 1000);
+        return $rk->getMetadata(false, $topic, 1000);
     }
 }
