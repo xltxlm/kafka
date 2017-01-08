@@ -1,17 +1,71 @@
 version: '2'
+
 services:
-  kafka:
-    image: redis
+  zookeeper:
+    image: zookeeperrun
     volumes:
-      - ../../:/kafka/
+      - ../opt/zookeeper1/:/opt/zookeeper
     networks:
       comm:
         aliases:
-          - kafka
-    ports:
-        - "6379:6379"
+          - zookeeper1
 
     restart: always
+
+#  zookeeper2:
+#    image: zookeeperrun
+#    volumes:
+#      - ../opt/zookeeper2:/opt/zookeeper
+#    networks:
+#      comm:
+#        aliases:
+#          - zookeeper2
+#
+#    restart: always
+#
+#  zookeeper3:
+#    image: zookeeperrun
+#    volumes:
+#      - ../opt/zookeeper3:/opt/zookeeper
+#    networks:
+#      comm:
+#        aliases:
+#          - zookeeper3
+#
+#    restart: always
+
+  kafka:
+    image: kafkarun
+    volumes:
+      - ../opt/kafka1:/opt/kafka
+    networks:
+      comm:
+        aliases:
+          - kafka1
+
+    restart: always
+
+  kafka2:
+    image: kafkarun
+    volumes:
+      - ../opt/kafka2:/opt/kafka
+    networks:
+      comm:
+        aliases:
+          - kafka2
+
+    restart: always
+
+#  kafka3:
+#    image: kafkarun
+#    volumes:
+#      - ../opt/kafka3:/opt/kafka
+#    networks:
+#      comm:
+#        aliases:
+#          - kafka3
+#
+#    restart: always
 
 networks:
     comm:
