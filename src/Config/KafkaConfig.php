@@ -13,6 +13,9 @@ use RdKafka\Metadata;
 use RdKafka\Producer;
 use RdKafka\ProducerTopic;
 use xltxlm\config\TestConfig;
+use xltxlm\kafka\Logger\KafkaConsumerConnectLogger;
+use xltxlm\kafka\Logger\KafkaProduceConnectLogger;
+use xltxlm\logger\Logger;
 
 abstract class KafkaConfig implements TestConfig
 {
@@ -75,7 +78,10 @@ abstract class KafkaConfig implements TestConfig
         $rk->addBrokers($this->getBrokers());
         /** @var ProducerTopic $topic */
         $topic = $rk->newTopic($this->getTopic());
-
+        (new Logger((new KafkaProduceConnectLogger)
+            ->setBrokers($this->getBrokers())
+            ->setTopic($this->getTopic())
+        ))->__invoke();
         return $topic;
     }
 
@@ -104,6 +110,10 @@ abstract class KafkaConfig implements TestConfig
         $rk = new Consumer();
         $rk->setLogLevel(LOG_DEBUG);
         $rk->addBrokers($this->getBrokers());
+        (new Logger((new KafkaConsumerConnectLogger())
+            ->setBrokers($this->getBrokers())
+            ->setTopic($this->getTopic())
+        ))->__invoke();
         return $rk;
     }
 
