@@ -92,7 +92,7 @@ abstract class KafkaConfig implements TestConfig
      */
     final public function instanceSelfProduct()
     {
-        $kafka = $this->getBrokers() . $this->getTopic();
+        $kafka = $this->getBrokers().$this->getTopic();
         if (!self::$instance[$kafka]) {
             self::$instance[$kafka] = $this->instanceProduct();
         }
@@ -123,7 +123,7 @@ abstract class KafkaConfig implements TestConfig
      */
     final public function instanceSelfConsumer()
     {
-        $kafka = $this->getBrokers() . $this->getTopic();
+        $kafka = $this->getBrokers().$this->getTopic();
         if (!self::$instance[$kafka]) {
             self::$instance[$kafka] = $this->instanceConsumerRk();
         }
@@ -139,6 +139,6 @@ abstract class KafkaConfig implements TestConfig
         $rk = $this->instanceSelfConsumer();
         $topic = $rk->newTopic($this->getTopic());
         /** @var Metadata $metadata */
-        return $rk->getMetadata(false, $topic, 1000);
+        return $rk->getMetadata(false, $topic, 6 * 1000);
     }
 }
