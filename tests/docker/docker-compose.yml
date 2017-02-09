@@ -3,7 +3,7 @@ version: '2'
 services:
 
   php:
-    image: phprun
+    image: registry.cn-hangzhou.aliyuncs.com/xialintai/php
     volumes:
       - ../../:/var/www/html
       - ../opt/:/opt/
